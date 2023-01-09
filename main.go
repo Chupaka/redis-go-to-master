@@ -96,6 +96,7 @@ func getMasterAddr() *net.TCPAddr {
 		d := net.Dialer{Timeout: 1 * time.Second}
 		conn, err := d.Dial("tcp", node)
 		if err != nil {
+			log.Printf("Can't connect to %s: %s\n", node, err)
 			continue
 		}
 
