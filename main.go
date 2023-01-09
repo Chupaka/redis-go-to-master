@@ -39,6 +39,8 @@ func main() {
 
 	nodes = strings.Split(*redisNodes, ",")
 
+	log.Printf("Starting to watch the following redis servers: %s", strings.Join(nodes, ", "))
+
 	go followMaster()
 
 	listener, err := net.ListenTCP("tcp", laddr)
