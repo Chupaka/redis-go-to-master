@@ -14,7 +14,7 @@ import (
 var (
 	masterAddr *net.TCPAddr
 
-	nodes []*net.TCPAddr
+	nodes []string
 
 	listenAddr = flag.String("listen", "", "listen address:port")
 	redisNodes = flag.String("nodes", "", "comma-separated list of redis nodes")
@@ -37,14 +37,7 @@ func main() {
 		log.Fatalf("Failed to resolve listen address: %s\n", err)
 	}
 
-	for _, n := range strings.Split(*redisNodes, ",") {
-		naddr, err := net.ResolveTCPAddr("tcp", n)
-		if err != nil {
-			log.Fatalf("Failed to resolve node address: %s\n", err)
-		}
-
-		nodes = append(nodes, naddr)
-	}
+	nodes = strings.Split(*redisNodes, ",")
 
 	go followMaster()
 
@@ -101,7 +94,7 @@ func pipe(r io.Reader, w io.WriteCloser) {
 func getMasterAddr() *net.TCPAddr {
 	for _, node := range nodes {
 		d := net.Dialer{Timeout: 1 * time.Second}
-		conn, err := d.Dial("tcp", node.String())
+		conn, err := d.Dial("tcp", node)
 		if err != nil {
 			continue
 		}
@@ -122,11 +115,11 @@ func getMasterAddr() *net.TCPAddr {
 		}
 
 		if bytes.Contains(b[:l], []byte("role:master")) {
-			return node
+			return conn.RemoteAddr().(*net.TCPAddr)
 		}
 
 		if bytes.Contains(b[:l], []byte("-NOAUTH")) {
-			log.Printf("%s: NOAUTH Authentication required\n", node.IP)
+			log.Printf("%s: NOAUTH Authentication required\n", node)
 		}
 	}
 
