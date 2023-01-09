@@ -9,6 +9,8 @@ import (
 	"net"
 	"strings"
 	"time"
+
+	systemdnotify "github.com/iguanesolutions/go-systemd/v5/notify"
 )
 
 var (
@@ -19,6 +21,8 @@ var (
 	listenAddr = flag.String("listen", "", "listen address:port")
 	redisNodes = flag.String("nodes", "", "comma-separated list of redis nodes")
 	redisAuth  = flag.String("auth", "", "redis auth string")
+
+	connectionsProxied int64 = 0
 )
 
 func main() {
@@ -48,12 +52,18 @@ func main() {
 		log.Fatalf("Can't open listening socket: %s\n", err)
 	}
 
+	if err = systemdnotify.Ready(); err != nil {
+		log.Printf("failed to notify ready to systemd: %v\n", err)
+	}
+
 	for {
 		conn, err := listener.AcceptTCP()
 		if err != nil {
 			log.Printf("Can't accept connection: %s\n", err)
 			continue
 		}
+
+		connectionsProxied += 1
 
 		go proxy(conn, masterAddr)
 	}
@@ -72,6 +82,8 @@ func followMaster() {
 		masterAddr = newAddr
 
 		time.Sleep(1 * time.Second)
+
+		systemdnotify.Status(fmt.Sprintf("Connections proxied: %d", connectionsProxied))
 	}
 }
 
