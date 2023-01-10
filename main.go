@@ -123,7 +123,7 @@ func getMasterAddr() *net.TCPAddr {
 		if *redisAuth != "" {
 			conn.Write([]byte(fmt.Sprintf("AUTH %s\r\ninfo replication\r\n", *redisAuth)))
 		} else {
-			conn.Write([]byte(fmt.Sprintf("info replication\r\n")))
+			conn.Write([]byte("info replication\r\n"))
 		}
 
 		b := make([]byte, 4096)
