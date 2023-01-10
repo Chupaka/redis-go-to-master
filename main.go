@@ -65,13 +65,22 @@ func main() {
 		log.Printf("Failed to notify ready to systemd: %v\n", err)
 	}
 
+	ratePeriodStart := time.Now()
+	rateProxiedValue := globalStats.connectionsProxied
+
 	// just update systemd status time to time
 	for {
 		time.Sleep(time.Second * 5)
 
-		statusString := fmt.Sprintf("Active connections: %d, proxied: %d",
+		var delta float64
+		var rateProxied float64
+		delta, ratePeriodStart = time.Since(ratePeriodStart).Seconds(), time.Now()
+		rateProxied, rateProxiedValue = float64(globalStats.connectionsProxied-rateProxiedValue)/delta, globalStats.connectionsProxied
+
+		statusString := fmt.Sprintf("Active connections: %d, proxied: %d, rate: %.1f/sec",
 			globalStats.pipesActive/2,
-			globalStats.connectionsProxied)
+			globalStats.connectionsProxied,
+			rateProxied)
 
 		if systemdnotify.IsEnabled() {
 			systemdnotify.Status(statusString)
