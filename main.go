@@ -26,6 +26,10 @@ var (
 )
 
 func main() {
+	if systemdnotify.IsEnabled() {
+		log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+	}
+
 	flag.Parse()
 
 	if *listenAddr == "" {
