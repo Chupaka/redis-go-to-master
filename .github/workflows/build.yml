@@ -15,9 +15,26 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
       - name: build
-        run: go mod init redis-go-to-master && go mod tidy && go build -ldflags="-s -w" -o redis-go-to-master .
+        run: |
+          go mod init redis-go-to-master
+          go mod tidy
+          go build -ldflags="-s -w" -o redis-go-to-master .
+      - name: prepare-package
+        run: |
+          mkdir -p .debpkg/usr/bin
+          cp -p redis-go-to-master .debpkg/usr/bin/
+      - name: package
+        uses: jiro4989/build-deb-action@v2
+        with:
+          package: ${{ env.APP_NAME }}
+          package_root: .debpkg
+          maintainer: ${{ env.MAINTAINER }}
+          version: ${{ github.ref }}
+          desc: ${{ env.DESC }}
       - name: release
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
-          files: redis-go-to-master
+          files: |
+            redis-go-to-master
+            ${{ steps.package.outputs.file_name }}
