@@ -1,0 +1,22 @@
+project_name: redis-go-to-master
+builds:
+  - env: [CGO_ENABLED=0]
+    goos:
+      - linux
+    goarch:
+      - amd64
+nfpms:
+  - maintainer: Pavel Skuratovich <chupaka@gmail.com>
+    description: redis-go-to-master proxies Redis connections to current master in a replicated setup
+    homepage: https://github.com/Chupaka/redis-go-to-master
+    formats:
+      - deb
+    scripts:
+      postinstall: post-install.sh
+    contents:
+      - src: redis-go-to-master.yaml
+        dst: /etc/redis-go-to-master.yaml
+        type: config
+      - src: redis-go-to-master.service
+        dst: /lib/systemd/system/redis-go-to-master.service
+        type: config

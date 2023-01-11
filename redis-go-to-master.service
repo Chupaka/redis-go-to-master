@@ -1,0 +1,12 @@
+[Unit]
+Description=Redis Go-To-Master
+Documentation=https://github.com/Chupaka/redis-go-to-master
+After=multi-user.target
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/redis-go-to-master /etc/redis-go-to-master.conf
+Restart=on-abnormal
+
+[Install]
+WantedBy=multi-user.target

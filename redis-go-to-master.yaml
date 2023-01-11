@@ -1,0 +1,6 @@
+ports:
+  - 6379
+nodes:
+  # - redis1
+  # - redis2
+# auth: "Your-Redis-Auth-Key"

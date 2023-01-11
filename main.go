@@ -44,7 +44,7 @@ func main() {
 	flag.Parse()
 
 	if *configPorts == "" {
-		log.Fatalln("Must specify listening ports!")
+		log.Fatalln("Must specify at least one listening port!")
 	}
 
 	if *configNodes == "" {
