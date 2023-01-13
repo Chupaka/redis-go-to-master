@@ -10,4 +10,14 @@ Small command-line utility (based on the ideas from <https://github.com/flant/re
 Usage
 -----
 
-`./redis-go-to-master --ports 6379 --hosts redis1,redis2 --auth MyAuthKey`
+Create a config file in YAML:
+
+    ports:
+      - 6379
+    nodes:
+      - redis1
+      - redis2
+    # auth: "Your-Redis-Auth-Key"
+
+Run redis-go-to-master:
+`./redis-go-to-master /path/to/config.yaml`

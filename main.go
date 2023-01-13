@@ -2,17 +2,19 @@ package main
 
 import (
 	"bytes"
-	"flag"
 	"fmt"
 	"io"
 	"log"
 	"net"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	systemdnotify "github.com/iguanesolutions/go-systemd/v5/notify"
+	"gopkg.in/yaml.v2"
 )
 
 type RedisPort struct {
@@ -26,12 +28,14 @@ type Stats struct {
 	pipesActive        uint32
 }
 
-var (
-	nodes []string
+type ConfigStruct struct {
+	Ports []string `yaml:"ports"`
+	Nodes []string `yaml:"nodes"`
+	Auth  string   `yaml:"auth"`
+}
 
-	configPorts = flag.String("ports", "", "comma-eparated list of listening ports")
-	configNodes = flag.String("nodes", "", "comma-separated list of redis nodes hostnames")
-	configAuth  = flag.String("auth", "", "redis auth string")
+var (
+	config ConfigStruct
 
 	globalStats Stats
 )
@@ -41,23 +45,42 @@ func main() {
 		log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
 	}
 
-	flag.Parse()
+	if len(os.Args) != 2 {
+		log.Fatalln("A single parameter is expected: config file name")
+	}
 
-	if *configPorts == "" {
+	fn, err := filepath.Abs(os.Args[1])
+	if err != nil {
+		log.Fatalf("Can't get config file absolute path: %s\n", err)
+	}
+
+	log.Printf("Using onfiguration file %s\n", fn)
+
+	f, err := os.Open(fn)
+	if err != nil {
+		log.Fatalf("Can't open config file: %s\n", err)
+	}
+
+	err = yaml.NewDecoder(f).Decode(&config)
+	if err != nil {
+		log.Fatalf("Can't read config: %s\n", err)
+	}
+
+	f.Close()
+
+	if len(config.Ports) < 1 {
 		log.Fatalln("Must specify at least one listening port!")
 	}
 
-	if *configNodes == "" {
+	if len(config.Nodes) < 1 {
 		log.Fatalln("Must specify at least one redis node!")
 	}
 
-	nodes = strings.Split(*configNodes, ",")
-	log.Printf("Watching the following redis servers: %s", strings.Join(nodes, ", "))
+	log.Printf("Watching the following redis servers: %s", strings.Join(config.Nodes, ", "))
 
-	ports := strings.Split(*configPorts, ",")
-	log.Printf("Serving the following ports: %s", strings.Join(ports, ", "))
+	log.Printf("Serving the following ports: %s", strings.Join(config.Ports, ", "))
 
-	for _, port := range ports {
+	for _, port := range config.Ports {
 		go ServePort(port)
 	}
 
@@ -167,7 +190,7 @@ func pipe(r io.Reader, w io.WriteCloser) {
 }
 
 func getMasterAddr(port string) *net.TCPAddr {
-	for _, node := range nodes {
+	for _, node := range config.Nodes {
 		d := net.Dialer{Timeout: 1 * time.Second}
 		conn, err := d.Dial("tcp", node+":"+port)
 		if err != nil {
@@ -177,8 +200,8 @@ func getMasterAddr(port string) *net.TCPAddr {
 
 		defer conn.Close()
 
-		if *configAuth != "" {
-			conn.Write([]byte(fmt.Sprintf("AUTH %s\r\ninfo replication\r\n", *configAuth)))
+		if config.Auth != "" {
+			conn.Write([]byte(fmt.Sprintf("AUTH %s\r\ninfo replication\r\n", config.Auth)))
 		} else {
 			conn.Write([]byte("info replication\r\n"))
 		}
@@ -187,7 +210,7 @@ func getMasterAddr(port string) *net.TCPAddr {
 
 		l, err := conn.Read(b)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Can't read Redis response: %s\n", err)
 		}
 
 		if bytes.Contains(b[:l], []byte("role:master")) {

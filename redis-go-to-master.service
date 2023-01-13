@@ -5,7 +5,7 @@ After=multi-user.target
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/redis-go-to-master /etc/redis-go-to-master.conf
+ExecStart=/usr/bin/redis-go-to-master /etc/redis-go-to-master.yaml
 Restart=on-abnormal
 
 [Install]
