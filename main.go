@@ -153,7 +153,10 @@ func ServePort(port string) {
 
 func followMaster(rp *RedisPort) {
 	for {
-		newAddr := getMasterAddr(rp.port)
+		var newAddr *net.TCPAddr
+		for attempt := 1; newAddr == nil && attempt <= 3; attempt++ {
+			newAddr = getMasterAddr(rp.port, attempt)
+		}
 
 		if newAddr == nil {
 			log.Printf("No masters found for port %s! Will not serve new connections until master is found...", rp.port)
@@ -189,9 +192,9 @@ func pipe(r io.Reader, w io.WriteCloser) {
 	atomic.AddUint32(&globalStats.pipesActive, ^uint32(0))
 }
 
-func getMasterAddr(port string) *net.TCPAddr {
+func getMasterAddr(port string, timeout int) *net.TCPAddr {
 	for _, node := range config.Nodes {
-		d := net.Dialer{Timeout: 1 * time.Second}
+		d := net.Dialer{Timeout: time.Duration(timeout) * time.Second}
 		conn, err := d.Dial("tcp", node+":"+port)
 		if err != nil {
 			log.Printf("Can't connect to %s: %s\n", node, err)
