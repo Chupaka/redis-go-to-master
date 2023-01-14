@@ -173,7 +173,7 @@ func followMaster(rp *RedisPort) {
 }
 
 func proxy(local io.ReadWriteCloser, remoteAddr *net.TCPAddr) {
-	d := net.Dialer{Timeout: 1 * time.Second}
+	d := net.Dialer{Timeout: 3 * time.Second}
 	remote, err := d.Dial("tcp", remoteAddr.String())
 	if err != nil {
 		log.Println(err)
@@ -197,7 +197,7 @@ func getMasterAddr(port string, timeout int) *net.TCPAddr {
 		d := net.Dialer{Timeout: time.Duration(timeout) * time.Second}
 		conn, err := d.Dial("tcp", node+":"+port)
 		if err != nil {
-			log.Printf("Can't connect to %s: %s\n", node, err)
+			log.Printf("Can't connect to %s with timeout %ds: %s\n", node, timeout, err)
 			continue
 		}
 
