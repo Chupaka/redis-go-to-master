@@ -181,6 +181,12 @@ func proxy(local io.ReadWriteCloser, remoteAddr *net.TCPAddr) {
 		return
 	}
 
+	local.(*net.TCPConn).SetKeepAlive(true)
+	local.(*net.TCPConn).SetKeepAlivePeriod(5 * time.Second)
+
+	remote.(*net.TCPConn).SetKeepAlive(true)
+	remote.(*net.TCPConn).SetKeepAlivePeriod(5 * time.Second)
+
 	go pipe(local, remote)
 	go pipe(remote, local)
 }
