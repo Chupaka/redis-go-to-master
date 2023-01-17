@@ -185,11 +185,13 @@ func proxy(local io.ReadWriteCloser, remoteAddr *net.TCPAddr) {
 	go pipe(remote, local)
 }
 
-func pipe(r io.Reader, w io.WriteCloser) {
-	atomic.AddUint32(&globalStats.pipesActive, 1)
+func pipe(r io.ReadCloser, w io.WriteCloser) {
+	atomic.AddUint32(&globalStats.pipesActive, 1)                // increase by 1
+	defer atomic.AddUint32(&globalStats.pipesActive, ^uint32(0)) // decrease by 1
+
+	defer r.Close()
+	defer w.Close()
 	io.Copy(w, r)
-	w.Close()
-	atomic.AddUint32(&globalStats.pipesActive, ^uint32(0))
 }
 
 func getMasterAddr(port string, timeout int) *net.TCPAddr {
