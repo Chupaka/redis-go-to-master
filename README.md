@@ -18,6 +18,7 @@ Create a config file in YAML:
       - redis1
       - redis2
     # auth: "Your-Redis-Auth-Key"
+    # proxy_connection_timeout: 3
 
 Run redis-go-to-master:
 `./redis-go-to-master /path/to/config.yaml`

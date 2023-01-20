@@ -4,3 +4,4 @@ nodes:
   # - redis1
   # - redis2
 # auth: "Your-Redis-Auth-Key"
+# proxy_connection_timeout: 3

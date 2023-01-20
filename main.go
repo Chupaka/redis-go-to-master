@@ -32,10 +32,14 @@ type ConfigStruct struct {
 	Ports []string `yaml:"ports"`
 	Nodes []string `yaml:"nodes"`
 	Auth  string   `yaml:"auth"`
+
+	ProxyConnectionTimeout int `yaml:"proxy_connection_timeout"`
 }
 
 var (
-	config ConfigStruct
+	config ConfigStruct = ConfigStruct{
+		ProxyConnectionTimeout: 10,
+	}
 
 	globalStats Stats
 )
@@ -173,7 +177,7 @@ func followMaster(rp *RedisPort) {
 }
 
 func proxy(local io.ReadWriteCloser, remoteAddr *net.TCPAddr) {
-	d := net.Dialer{Timeout: 3 * time.Second}
+	d := net.Dialer{Timeout: time.Duration(config.ProxyConnectionTimeout) * time.Second}
 	remote, err := d.Dial("tcp", remoteAddr.String())
 	if err != nil {
 		log.Println(err)
