@@ -1,9 +1,8 @@
 #!/bin/sh
 
 cleanInstall() {
-  printf "\033[32m Post Install of an clean install\033[0m\n"
+  printf "\033[32m Starting redis-go-to-master service...\033[0m\n"
 
-  printf "\033[32m Reload the service unit from disk\033[0m\n"
   systemctl daemon-reload ||:
   systemctl unmask redis-go-to-master.service ||:
   systemctl enable redis-go-to-master.service ||:
@@ -11,7 +10,7 @@ cleanInstall() {
 }
 
 upgrade() {
-  printf "\033[32m Post Install of an upgrade\033[0m\n"
+  printf "\033[32m Restarting redis-go-to-master service...\033[0m\n"
 
   systemctl daemon-reload ||:
   systemctl restart redis-go-to-master.service ||:
