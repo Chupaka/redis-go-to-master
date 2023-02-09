@@ -208,8 +208,10 @@ func getMasterAddr(port string, timeout int) *net.TCPAddr {
 	for _, node := range config.Nodes {
 		d := net.Dialer{Timeout: time.Duration(timeout) * time.Second}
 		conn, err := d.Dial("tcp", node+":"+port)
-		if (err != nil) && (timeout != 1) {
-			log.Printf("Can't connect to %s with timeout %ds: %s\n", node, timeout, err)
+		if err != nil {
+			if timeout != 1 {
+				log.Printf("Can't connect to %s with timeout %ds: %s\n", node, timeout, err)
+			}
 			continue
 		}
 
